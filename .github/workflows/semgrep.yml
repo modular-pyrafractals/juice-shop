@@ -1,0 +1,36 @@
+name: Semgrep Scan
+
+on:
+  # Scan on push to main branch
+  push:
+    branches: [ "master" ]
+  # Scan on PRs to main branch
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  semgrep:
+    name: Semgrep Code Scan
+    runs-on: ubuntu-latest
+    
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
+        publishConfig: .semgrep.yml
+        
+        # Generate a SARIF file for GitHub Code Scanning
+        generateSarif: true
+    
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: semgrep.sarif
